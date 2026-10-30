@@ -234,6 +234,15 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
 details.more>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--accent)}
 .ads-switch{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .ads-switch button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pg-guide{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:13px}
+.pg-guide button{padding:5px 12px;font-size:13px}
+.pg-guide .pg-t{font-weight:700}
+.pg-guide .pg-s{color:var(--muted);font-size:12px}
+.pg-guide select{padding:3px 6px;font-size:12px}
+.pg-guide ol{flex-basis:100%;margin:6px 0 2px 18px;padding:0;line-height:1.7}
+.pg-guide ol li{color:var(--muted);cursor:pointer}
+.pg-guide ol li.on{color:var(--ink);font-weight:700}
+.pg-guide .pg-sub{flex-basis:100%;font-size:15px;font-weight:700;min-height:1.6em;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -722,7 +731,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   const TAIKAI_REASONS = ['効果を感じない','通う時間がない（仕事・家庭）','費用','引っ越し・転勤','体調・けが','目標達成・満足','他のジムへ移った','予約が取りづらい','その他'];
   // 新機能のお知らせ（日付から7日間、ダッシュボード上部に表示。×で閉じると再表示しない）
   const RELEASE_NOTES = [
-    {date:'2026-10-30', items:['ダッシュボードの一番上に両店のまとめ（会員数・月会費売上・チラシ配布・Meta広告の表示回数）を表示。新規・退会などは「くわしく見る」で開きます','用賀店の料金をライト3,980円・メイン5,980円・プレミアム9,800円・休会1,100円・VIP0円に変更。野沢店に法人プラン（イルカ整骨院・1名5,500円）を追加。月次入力にはその店舗のプランだけが出ます','「広告」タブに Meta広告（Instagram・Facebook）を追加：消化金額・表示回数・リーチ・クリックを月ごとに入れると、ダッシュボードで先生方も見られます']},
+    {date:'2026-10-30', items:['ダッシュボードの一番上に両店のまとめ（会員数・月会費売上・チラシ配布・Meta広告の表示回数）を表示。新規・退会などは「くわしく見る」で開きます','用賀店の料金をライト3,980円・メイン5,980円・プレミアム9,800円・休会1,100円・VIP0円に変更。野沢店に法人プラン（イルカ整骨院・1名5,500円）を追加。月次入力にはその店舗のプランだけが出ます','「広告」タブに Meta広告（Instagram・Facebook）を追加：消化金額・表示回数・リーチ・クリックを月ごとに入れると、ダッシュボードで先生方も見られます','すべてのページの一番上に「このページの使い方」を追加：▶聞くを押すと端末の声で読み上げ、字幕が1文ずつ切り替わります。原稿を見る・速さの切り替えもできます','Meta広告の「Metaから取り込む」ボタンを追加（Apps Script 10/30 版と、Meta のアクセストークンの登録が必要）']},
     {date:'2026-10-06', items:["「掲載サイト」タブを追加：ポータル・福利厚生サービス・地図サービスの掲載状況を管理し、掲載先ごとの問い合わせ・体験・入会・費用を記録できます（調査済みの候補を取り込めます。Googleマップ・Yahoo!マップ・エキテンの掲載状況は10/6に確認した内容を店舗ごとに反映済み）","「Google広告」タブを追加：P-MAX の広告費・クリック・コンバージョンと、広告経由の問い合わせ・体験・入会から入会1人あたりの広告費を計算し、目標と比べます",'ターゲットを法人とスポーツチームに：「法人・チーム」タブを追加（調査済みの候補24件を取り込めます）。月次入力の新規に「法人契約」「スポーツチーム」を追加し、周辺情報は大人の人口と候補件数を表示']},
     {date:'2026-10-05', items:['AIRNIX COCKPIT を公開：会員数（プラン別）・新規の経路・退会理由・体験→入会率・チラシ配布マップ・スケジュール・パーソナル・低酸素ルームのプログラム設計を1か所で管理します']},
   ];
@@ -791,6 +800,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     tournaments = Array.isArray(d.tournaments) ? d.tournaments : []; tournamentsError = d.tournamentsError || '';
     news = Array.isArray(d.news) ? d.news : [];
     portals = Array.isArray(d.portals) ? d.portals : portals; portalResults = Array.isArray(d.portalResults) ? d.portalResults : portalResults;
+    metaAdsInfo = (d.metaAds && typeof d.metaAds==='object') ? d.metaAds : {configured:false};
     ads = Array.isArray(d.ads) ? d.ads : ads; adsDaily = Array.isArray(d.adsDaily) ? d.adsDaily : adsDaily; adsSettings = (d.adsSettings && typeof d.adsSettings==='object') ? d.adsSettings : adsSettings;
     events = Array.isArray(d.events) ? d.events : [];
     meta = d.meta && typeof d.meta==='object' ? d.meta : {}; calendarInfo = d.calendar || {configured:false};
@@ -2030,7 +2040,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       // Google広告スクリプトで取り込んだ日次データ
       const daily = dailyFor(m);
       $q('adFill').hidden = !daily.length;
-      if (o.noDaily){ $q('adAuto').innerHTML = o.autoNote || ''; return; }
+      if (o.noDaily){ if (o.sync){ $q('adFill').hidden=false; $q('adFill').textContent=o.sync.label; } $q('adAuto').innerHTML = (o.sync ? o.sync.status() : '') + (o.autoNote || ''); return; }
       $q('adAuto').innerHTML = daily.length ? `<h3 style="font-size:14px;margin:14px 0 6px">Google広告から自動で取り込んだ数字（${fmtMonth(m)}・キャンペーン別）</h3>
         <div class="tw"><table><thead><tr><th style="text-align:left">キャンペーン</th><th style="text-align:left">振り分け先</th><th>広告費</th><th>表示回数</th><th>クリック</th><th>コンバージョン</th><th>日数</th><th>最終日</th></tr></thead><tbody>
         ${daily.map(r=>`<tr><td style="text-align:left">${esc(r.campaign)}</td><td style="text-align:left">${esc((TG.find(t=>t.id===targetOf(r.campaign))||{}).name)}</td><td class="num">${yen(r.cost)}</td><td class="num">${num(r.impr)}</td><td class="num">${num(r.clicks)}</td><td class="num">${(Number(r.conv)||0).toFixed(1).replace(/\.0$/,'')}</td><td class="num">${num(r.days||0)}</td><td class="num">${esc(r.last||'')}</td></tr>`).join('')}
@@ -2052,7 +2062,13 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     $q('adMonth').addEventListener('change', ()=>{ if (st.dirty && !confirm('保存していない入力があります。月を切り替えますか？')){ $q('adMonth').value = st.month; return; } st.month = $q('adMonth').value; st.dirty=false; renderAll(); });
     $q('adTable').addEventListener('input', ()=>{ st.dirty = true; });
     $q('adTrendTarget').addEventListener('change', renderTrend);
-    $q('adFill').addEventListener('click', ()=>{
+    $q('adFill').addEventListener('click', async ()=>{
+      if (o.sync){ const msg=$q('adMsg');
+        if (st.dirty && !confirm('保存していない入力があります。取り込むと上書きされます。続けますか？')) return;
+        msg.className='msg'; msg.textContent='取り込み中…（10秒ほど）';
+        try { const r = await o.sync.run(st.month); msg.className='msg ok'; msg.textContent = `取り込みました：${(r&&r.report||[]).join(' ／ ')||'キャンペーンはありませんでした'}`; st.dirty=false; renderAll(); }
+        catch(e){ msg.className='msg err'; msg.textContent = (e && e.error==='unknown_action') ? 'Apps Script が古い版です。10/30 版の Code.gs に貼り替えてください。' : errText(e).replace('保存できませんでした','取り込めませんでした'); }
+        return; }
       const agg = {}; dailyFor(st.month).forEach(r=>{ const t = targetOf(r.campaign); const a = agg[t] || (agg[t] = {cost:0, impr:0, clicks:0, conv:0}); a.cost+=Number(r.cost)||0; a.impr+=Number(r.impr)||0; a.clicks+=Number(r.clicks)||0; a.conv+=Number(r.conv)||0; });
       Object.entries(agg).forEach(([t,a])=>['cost','impr','clicks','conv'].forEach(k=>{ const el = $q('adTable').querySelector(`input[data-t="${t}"][data-k="${k}"]`); if (el) el.value = k==='conv' ? Math.round(a[k]*10)/10 : Math.round(a[k]); }));
       const msg=$q('adMsg'); msg.className='msg'; st.dirty = true; msg.textContent='広告費・表示回数・クリック・コンバージョンを入れました。問い合わせ・体験・入会を確認して「保存」を押してください';
@@ -2073,7 +2089,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   }
 
   // ---------- 集客：掲載サイト・Google広告 ----------
-  let portals = [], portalResults = [], ads = [], adsDaily = [], adsSettings = {};
+  let portals = [], portalResults = [], ads = [], adsDaily = [], adsSettings = {}, metaAdsInfo = {configured:false};
   const PORTAL_SEED = [{"name": "Googleビジネスプロフィール", "category": "地図・口コミ", "fee": "無料", "url": "https://support.google.com/business/answer/7039811?hl=ja", "note": "【優先】Googleマップに掲載あり：「低酸素トレーニングジム AIRNIX野沢・世田谷」★4.9・口コミ17件（2026/10/6 確認）。検索結果の一覧にウェブサイトのリンクが出ていない→ airnix.jp を登録。オーナー確認。Google広告（P-MAX）とリンク", "store": "nozawa", "status": "掲載中", "reviewDate": "2026-10-10"}, {"name": "Googleビジネスプロフィール", "category": "地図・口コミ", "fee": "無料", "url": "https://support.google.com/business/answer/7039811?hl=ja", "note": "【優先】Googleマップに掲載あり：「低酸素トレーニングジム AIRNIX用賀」★5.0・口コミ44件（2026/10/6 確認）。検索結果の一覧にウェブサイトのリンクが出ていない→ airnix.jp を登録。オーナー確認。Google広告（P-MAX）とリンク", "store": "yoga", "status": "掲載中", "reviewDate": "2026-10-10"}, {"name": "Yahoo!プレイス", "category": "地図・口コミ", "fee": "無料（初期・月額・成果課金なし）", "url": "https://yplace.yahoo.co.jp/", "note": "【優先】Yahoo!マップに「AIRNIX」で掲載あり（2026/10/6 確認）。オーナー管理かは不明→Yahoo!プレイスで管理権を取得し、名称・写真・営業時間を整える", "store": "nozawa", "status": "掲載中", "reviewDate": "2026-10-10"}, {"name": "Yahoo!プレイス", "category": "地図・口コミ", "fee": "無料（初期・月額・成果課金なし）", "url": "https://yplace.yahoo.co.jp/", "note": "【優先】Yahoo!マップで見つからず（2026/10/6 確認）→新規登録", "store": "yoga"}, {"name": "エキテン（無料プラン）", "category": "地図・口コミ", "fee": "無料（正会員は月5,000円税抜）", "url": "https://owner.ekiten.jp/free-basic01", "note": "【優先】エキテンで見つからず（2026/10/6 確認）→新規登録", "store": "nozawa"}, {"name": "エキテン（無料プラン）", "category": "地図・口コミ", "fee": "無料（正会員は月5,000円税抜）", "url": "https://owner.ekiten.jp/free-basic01", "note": "【優先】エキテンで見つからず（2026/10/6 確認）→新規登録", "store": "yoga"}, {"name": "Apple Business Connect", "category": "地図・口コミ", "fee": "公式で要確認", "url": "https://businessconnect.apple.com/", "note": "外から確認できず（2026/10/6 確認）→iPhoneの「マップ」で両店を検索して確認", "store": "all"}, {"name": "ベネフィット・ステーション（提携）", "category": "福利厚生・法人", "fee": "掲載料・広告掲載費 無料", "url": "https://corp.benefit-one.co.jp/supplier/", "note": "【優先】法人会員の従業員向け優待として掲載。法人・チーム営業の入口に", "store": "all"}, {"name": "FIT Search", "category": "フィットネス検索", "fee": "掲載・制作 無料（審査あり）", "url": "https://fitsearch.jp/info_entry", "store": "all"}, {"name": "福利厚生倶楽部九州", "category": "福利厚生・法人", "fee": "登録・掲載料なし", "url": "https://fukuri.ahc-net.co.jp/business/", "store": "all"}, {"name": "ストアカ", "category": "体験・講座", "fee": "無料（手数料10〜20%）", "url": "https://www.street-academy.com/teach", "note": "低酸素トレーニング体験会・講座として出す", "store": "all"}, {"name": "START FITNESS", "category": "フィットネス検索", "fee": "成果報酬（入会時のみ・金額は要問合せ）", "url": "https://startme.jp/fitness/owner/index.html", "store": "all"}, {"name": "福利厚生倶楽部（リロクラブ）", "category": "福利厚生・法人", "fee": "料金は要確認", "url": "https://www.reloclub.jp/partner", "store": "all"}, {"name": "Asreet", "category": "フィットネス検索", "fee": "無料はテキストリンクのみ", "store": "all"}, {"name": "FitMap", "category": "フィットネス検索", "fee": "料金は要確認", "store": "all"}, {"name": "Citta BIZ（健康経営の比較）", "category": "福利厚生・法人", "fee": "料金は要確認", "note": "健康経営に取り組む企業向け", "store": "all"}];
   const portalUI = createPortalPage({
     root: $('portalRoot'), seed: PORTAL_SEED, allLabel: "両店",
@@ -2103,6 +2119,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       <li><b>体験・入会の受付で聞く</b>：「何を見て来ましたか？」で Instagram・Facebook の広告と答えた人を、この表の「体験」「入会」に入れます。</li></ol></div>`,
     getAds: ()=>ads.filter(r=>isMeta(r.target)), getDaily: ()=>[], getSettings: ()=>({}),
     saveAds: async (month, rows) => saveAdsMerged(month, rows, true), onSaved: ()=>renderDash(),
+    sync: { label: 'Metaから取り込む',
+      run: async month => { const r = await api.post('metaSync', {month}); await refresh(true); return r; },
+      status: () => metaAdsInfo.configured
+        ? `<p class="hint" style="margin-top:10px">Meta の広告アカウントとつながっています。毎朝6時台に今月と先月の数字を自動で取り込みます${metaAdsInfo.lastSync?`（最終 ${esc(metaAdsInfo.lastSync)}）`:''}。キャンペーン名に「野沢」「用賀」を入れると店舗に振り分けます（どちらもなければ両店共通）。問い合わせ・体験・入会は手入力のまま残ります。${metaAdsInfo.lastError?`<br><span style="color:var(--bad)">前回のエラー：${esc(metaAdsInfo.lastError)}</span>`:''}</p>`
+        : `<p class="hint" style="margin-top:10px">Meta とはまだつながっていません。Apps Script に広告アカウントIDとアクセストークンを登録すると、「Metaから取り込む」と毎朝の自動取り込みが使えます。それまでは広告マネージャの数字を手で入れてください。</p>` },
     saveSettings: async ()=>{},
   });
   document.querySelectorAll('[data-ads]').forEach(b=>b.addEventListener('click', ()=>{
@@ -2118,6 +2139,141 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     webJoins: (m, id) => { if (id==='all') return null; const r = monthly[key(m,id)]; return r && r.shinkiSns!=null && r.shinkiSns!=='' ? Number(r.shinkiSns) : null; },
     webLabel: "月次入力の「新規：SNS・web」とも見比べてください（右端の列）。体験予約は mypage.airnix.jp なので、予約完了をコンバージョンにするにはドメインをまたぐ計測の設定が必要です。", webShort: '月次入力 新規(web)',
   });
+
+  // ---------- 各ページの使い方（音声）----------
+  // 端末の日本語の声で読み上げます（費用なし・原稿を直せばそのまま反映）。字幕は1文ずつ切り替わります。
+  const PAGE_GUIDES = {
+ "dash": [
+  "ダッシュボードの使い方です。",
+  "一番上の「表示する月」で、見たい月を選びます。",
+  "野沢店・用賀店・両店合計の3枚のカードに、会員数、月会費売上、その月のチラシ配布枚数、Meta広告の表示回数が出ます。",
+  "会員数は、在籍から休会を引いた人数です。前月と比べた増減も出ます。",
+  "その下の「チラシの配布状況」では、店舗ごとの配布枚数と、最近の配布報告が見られます。",
+  "「Meta広告の見られ方」では、インスタグラムとフェイスブックの広告が何回表示され、何人に見られ、何回クリックされたかが分かります。",
+  "新規入会や退会の内訳、目標までの進み具合は、一番下の「くわしく見る」を押すと開きます。"
+ ],
+ "input": [
+  "月次入力の使い方です。",
+  "月末の会員数と、その月の動きを、店舗ごとに1か月1回入れます。",
+  "まず、店舗と月を選びます。上の登録状況の表で、数字のセルを押しても移れます。",
+  "会員数の欄には、その店舗のプランだけが出ます。用賀店はライト、メイン、プレミアム、野沢店は従来のプランと、イルカ整骨院の法人プランです。休会とVIPもここに入れます。",
+  "当月の動きには、新規入会の経路、退会、チラシの配布枚数、体験者数を入れます。チラシの枚数は、空欄なら配布報告の合計が自動で使われます。",
+  "新規と退会の内訳を入れると、上の合計は自動で計算されます。",
+  "下の「自動計算」で会員数と月会費売上を確かめてから、「保存する」を押してください。"
+ ],
+ "flyer": [
+  "チラシ配布の使い方です。",
+  "チラシを配ったら、その日のうちに報告します。報告は、ここの入力欄か、塚本道場と共通のグーグルフォームのどちらでもできます。フォームでは、道場の欄で「エアニックス野沢」か「エアニックス用賀」を選びます。",
+  "入れるのは、店舗、配布日、枚数、配ったエリア、配った人です。エリアは「用賀3丁目」のように、町名と丁目まで書いてください。",
+  "地図では、配った町丁目が色で塗られます。まだ配っていない場所が、ひと目で分かります。",
+  "下の報告履歴で、間違えた報告は削除できます。"
+ ],
+ "sched": [
+  "スケジュールの使い方です。",
+  "店舗を選ぶと、1週間のコマ表が出ます。",
+  "最初に「店舗の設定」で、同時に入れる最大人数を登録します。",
+  "「クラスを追加」で、クラス名、曜日、開始と終了の時間、定員、担当トレーナーを入れます。曜日を複数選ぶと、同じクラスをまとめて作れます。",
+  "時間の重なりや、定員の超過、同じトレーナーの重複があると、警告が出ます。",
+  "下の集計で、トレーナーごとの担当コマ数が分かります。"
+ ],
+ "b2b": [
+  "法人・チームの使い方です。",
+  "エアニックスの主なお客様は大人なので、会社の福利厚生と、スポーツチームの持久力トレーニングに提案します。そのための候補の一覧です。",
+  "一覧の状況は、未接触、接触済み、提案中、体験実施、契約、見送りの順に進めます。",
+  "名前を押すと、窓口、担当、次にやること、期限を書けます。",
+  "新しい候補は「追加」で増やします。上の数字で、商談中の件数や、契約の月額の合計が分かります。"
+ ],
+ "personal": [
+  "パーソナルの使い方です。",
+  "パーソナルトレーニングのメニューを作るページです。",
+  "メニュー名、目的、1回の時間、料金、担当、低酸素の環境を使うかどうか、内容を決めます。",
+  "状態を「販売中」にしたものが、お客様に出すメニューです。",
+  "月ごとの実績を入れると、回数と売上の推移が分かります。"
+ ],
+ "hypoxic": [
+  "低酸素ルームの使い方です。",
+  "地下の低酸素ルームで行うプログラムを設計するページです。",
+  "最初に「ルームの設定」で、同時に使える人数、1枠の長さ、設定できる酸素濃度を登録します。",
+  "プログラムごとに、標高に相当する酸素濃度、時間、強度、流れ、注意事項を決めます。",
+  "中止の基準は、施設や専門家の基準をそのまま書き込んでください。このアプリから数値を提案することはありません。"
+ ],
+ "news": [
+  "周辺情報の使い方です。",
+  "上の商圏データでは、各店舗から半径1.5キロの、20歳から64歳の人口の目安と、法人やチームの候補の件数が見られます。",
+  "近くのジムの開店やキャンペーン、地域のイベントなど、気づいたことを「周辺情報を登録」から入れます。",
+  "登録したものは、種別ごとの件数と一覧で見返せます。"
+ ],
+ "portal": [
+  "掲載サイトの使い方です。",
+  "グーグルマップ、ヤフープレイス、比較サイトなど、エアニックスを載せている、または載せたいサイトを一か所で管理します。",
+  "状態は、未申込、申込中、掲載中、停止、見送りから選びます。見直し日を過ぎると赤字になります。",
+  "ログインIDは書けますが、パスワードは書かないでください。",
+  "月ごとに、そのサイトから来た問い合わせ、体験、入会、費用を入れると、入会1人あたりの費用が分かります。"
+ ],
+ "ads": [
+  "広告のページの使い方です。",
+  "上のボタンで、メタ広告とグーグル広告を切り替えます。",
+  "メタ広告は、インスタグラムとフェイスブックの広告です。月を選んで、消化金額、表示回数、リーチ、リンクのクリックを、店舗ごとに入れます。設定が済んでいれば、「Metaから取り込む」を押すと自動で入ります。",
+  "問い合わせ、体験、入会には、受付で「広告を見て来た」と答えた人だけを入れてください。",
+  "保存すると、ダッシュボードに表示回数とリーチが出て、先生方も見られるようになります。",
+  "下の推移で、月ごとの費用と、入会1人あたりの広告費を比べられます。"
+ ],
+ "trend": [
+  "推移の使い方です。",
+  "グラフで、店舗ごとの会員数の動きを月ごとに見られます。",
+  "下の表には、毎月の会員数、月会費売上、新規、退会、チラシの配布枚数と反応率が並びます。",
+  "一番下の店舗別累計で、これまでの合計が分かります。"
+ ],
+ "rates": [
+  "料金マスタと目標の使い方です。",
+  "料金マスタには、プランごとの月額を店舗別に入れます。0円にしたプランは、その店舗の月次入力に出なくなります。",
+  "用賀店のライト、メイン、プレミアムと、野沢店の法人プランは、「追加オプション料金」の表にあります。「会員に含める」にチェックが入っているものが、会員数と売上に数えられます。",
+  "目標の欄では、店舗ごとに、起点の月、目標の会員数、期限を決めます。決めると、ダッシュボードに進み具合が出ます。",
+  "トレーナーの一覧は、スケジュールの担当欄に使われます。料金を変えたら、必ず保存を押してください。"
+ ]
+};
+  const pageGuide = (() => {
+    const synth = window.speechSynthesis; let cur = null, idx = 0, playing = false, token = 0;
+    let rate = 1; try { rate = Number(localStorage.getItem('airnix_guide_rate')) || 1; } catch(e){}
+    const pickVoice = () => { if (!synth) return null; const vs = synth.getVoices().filter(v=>/^ja/i.test(v.lang));
+      const pref = ['Kyoko','O-ren','Google 日本語','Nanami','Haruka','Ayumi']; for (const n of pref){ const v = vs.find(v=>v.name.includes(n)); if (v) return v; } return vs[0]||null; };
+    if (synth && synth.onvoiceschanged!==undefined) synth.onvoiceschanged = ()=>{};
+    const box = id => document.querySelector(`.pg-guide[data-pg="${id}"]`);
+    function paint(){ document.querySelectorAll('.pg-guide').forEach(b=>{ const id=b.dataset.pg, on = id===cur && playing;
+      b.querySelector('[data-pg-play]').textContent = on ? '■ 止める' : '▶ 聞く';
+      b.querySelectorAll('li').forEach((li,i)=>li.classList.toggle('on', id===cur && i===idx && playing));
+      const sub=b.querySelector('.pg-sub'); sub.hidden = !(id===cur && playing); if (id===cur && playing) sub.textContent = PAGE_GUIDES[id][idx]; }); }
+    function stop(){ token++; playing=false; if (synth) synth.cancel(); paint(); }
+    function speakFrom(id, i){
+      if (!synth){ alert('このブラウザは読み上げに対応していません。字幕（一覧）をお読みください。'); return; }
+      stop(); cur=id; idx=i; playing=true; const my=++token; paint();
+      const say = () => { if (my!==token) return; const t = PAGE_GUIDES[id][idx]; if (t==null){ playing=false; paint(); return; }
+        const u = new SpeechSynthesisUtterance(t); u.lang='ja-JP'; u.rate=rate; const v=pickVoice(); if (v) u.voice=v;
+        u.onend = () => { if (my!==token) return; idx++; paint(); say(); }; u.onerror = () => { if (my!==token) return; playing=false; paint(); };
+        synth.speak(u); };
+      say();
+    }
+    function mount(id){
+      const sec = document.getElementById('tab-'+id); if (!sec || sec.querySelector('.pg-guide') || !PAGE_GUIDES[id]) return;
+      const lines = PAGE_GUIDES[id]; const secs = Math.round(lines.join('').length / 7.5);
+      const el = document.createElement('div'); el.className='pg-guide'; el.dataset.pg=id;
+      el.innerHTML = `<span aria-hidden="true">🔊</span><span class="pg-t">このページの使い方</span><span class="pg-s">約${secs}秒・端末の声で読み上げ</span>
+        <button type="button" class="ghost" data-pg-play>▶ 聞く</button>
+        <label class="pg-s">速さ <select data-pg-rate>${[[0.85,'ゆっくり'],[1,'ふつう'],[1.2,'少し速く'],[1.4,'速く']].map(([v,l])=>`<option value="${v}"${v===rate?' selected':''}>${l}</option>`).join('')}</select></label>
+        <button type="button" class="ghost" data-pg-text aria-expanded="false">原稿を見る</button>
+        <div class="pg-sub" aria-live="polite" hidden></div>
+        <ol hidden>${lines.map((t,i)=>`<li data-i="${i}" title="ここから聞く">${esc(t)}</li>`).join('')}</ol>`;
+      sec.insertBefore(el, sec.firstChild);
+      el.querySelector('[data-pg-play]').addEventListener('click', ()=>{ if (cur===id && playing) stop(); else speakFrom(id, 0); });
+      el.querySelector('[data-pg-rate]').addEventListener('change', e=>{ rate=Number(e.target.value)||1; try{ localStorage.setItem('airnix_guide_rate', String(rate)); }catch(err){} if (cur===id && playing) speakFrom(id, idx); });
+      el.querySelector('[data-pg-text]').addEventListener('click', e=>{ const ol=el.querySelector('ol'); ol.hidden=!ol.hidden; e.target.setAttribute('aria-expanded', String(!ol.hidden)); e.target.textContent = ol.hidden?'原稿を見る':'原稿を閉じる'; });
+      el.querySelectorAll('li').forEach(li=>li.addEventListener('click', ()=>speakFrom(id, Number(li.dataset.i))));
+    }
+    Object.keys(PAGE_GUIDES).forEach(mount);
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.addEventListener('click', ()=>{ if (playing && b.dataset.tab!==cur) stop(); }));
+    window.addEventListener('pagehide', stop);
+    return { stop };
+  })();
 
   // ---------- flyer reports ----------
   $('flyerCopy').addEventListener('click', async ()=>{
