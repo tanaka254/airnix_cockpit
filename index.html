@@ -215,19 +215,23 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
 .ad-bar{position:relative;height:22px;display:flex;align-items:center;justify-content:flex-end}
 .ad-bar i{position:absolute;left:0;top:3px;bottom:3px;background:var(--accent-soft);border-radius:3px}
 .ad-bar span{position:relative}
-.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:18px}
-.sum-store{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.sum-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;gap:0 12px;margin-bottom:18px}
+.sum-store{display:grid;grid-template-rows:subgrid;grid-row:span 4;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:12px;min-width:0}
 .sum-store.total{background:var(--accent-soft)}
-.sum-store h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.sum-store h3 .sub{font-size:11px;font-weight:400;color:var(--muted)}
-.sum-big{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
-.sum-big .l{font-size:11px;color:var(--muted)}
-.sum-big .v{font-size:22px;font-weight:700;line-height:1.15}
-.sum-big .d{font-size:11px;color:var(--muted)}
-.sum-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-top:1px dashed var(--line)}
-.sum-row:first-of-type{margin-top:10px}
-.sum-row .l{color:var(--muted);white-space:nowrap}
-.sum-row .v{text-align:right}
+.sum-store h3{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:24px}
+.sum-store h3 .sub{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap}
+.sum-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:10px}
+.sum-cell,.sum-line{min-width:0}
+.sum-store .l{font-size:11px;color:var(--muted)}
+.sum-store .v{font-size:24px;font-weight:700;line-height:1.2;white-space:nowrap}
+.sum-store .v small{font-size:12px;font-weight:400;margin-left:2px;color:var(--muted)}
+.sum-store .v .none{color:var(--muted);font-weight:400}
+.sum-store .d{font-size:12px;color:var(--muted);line-height:1.5;min-height:1.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sum-line{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"l v" "d d";align-items:baseline;gap:0 10px;padding:10px 0 2px;border-top:1px dashed var(--line)}
+.sum-line .l{grid-area:l}.sum-line .v{grid-area:v;text-align:right;font-size:20px}.sum-line .d{grid-area:d;text-align:right}
+
+.sum-pair .d{white-space:normal}
+@media (max-width:820px){.sum-grid{grid-template-columns:1fr}.sum-store{grid-row:auto;grid-template-rows:auto}}
 .minibars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:6px}
 .minibars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--muted)}
 .minibars i{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
@@ -968,22 +972,35 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       rs.forEach(r=>{ ['cost','impr','clicks'].forEach(k=>{ const v=mv(r,k); if(v!=null){ t[k]+=v; t.any=true; } }); const rc=mv(r,'conv'); if(rc!=null){ t.reach+=rc; t.any=true; } }); return t.any?t:null; };
     const lastFl = list => list.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
     const mdate = d => { const x=String(d||'').slice(5).split('-'); return x.length===2?`${Number(x[0])}/${Number(x[1])}`:esc(d||''); };
-    const card = (title, sub, v, kyukai, uri, jitsuDiff, list, meta, isTotal) => {
+    // 3枚のカードは同じ行構成（見出し／会員数・売上／チラシ／Meta）。CSS の subgrid で行の高さを揃える
+    const card = (title, sub, v, kyukai, uri, jitsuDiff, list, meta, isTotal, diffNote) => {
       const lf = lastFl(list); const fsum = list.reduce((a,f)=>a+(Number(f.count)||0),0);
-      return `<div class="sum-store${isTotal?' total':''}"><h3><span>${esc(title)}</span><span class="sub">${sub}</span></h3>
-        <div class="sum-big"><div><div class="l">会員数</div><div class="v num">${v.entered||isTotal?num(v.jitsudo)+'<span style="font-size:13px;font-weight:400"> 名</span>':'—'}</div><div class="d num">${jitsuDiff==null?(kyukai?`休会 ${num(kyukai)}名`:''):`前月比 <span class="${jitsuDiff>=0?'pos':'neg'}">${signed(jitsuDiff)}名</span>${kyukai?` ・ 休会 ${num(kyukai)}名`:''}`}</div></div>
-        <div><div class="l">月会費売上</div><div class="v num">${v.entered||isTotal?yen(uri):'—'}</div><div class="d num">${v.jitsudo?`1名あたり ${yen(uri/v.jitsudo)}`:''}</div></div></div>
-        <div class="sum-row"><span class="l">チラシ配布</span><span class="v num">${fsum?`<b>${num(fsum)}枚</b>（${list.length}回）${lf&&!isTotal?`<br><span style="color:var(--muted);font-size:12px">最終 ${mdate(lf.date)} ${esc(lf.area||'')}</span>`:''}`:'<span style="color:var(--muted)">この月の報告なし</span>'}</span></div>
-        <div class="sum-row"><span class="l">Meta広告 表示回数</span><span class="v num">${meta?`<b>${num(meta.impr)}回</b>${meta.reach?`<br><span style="color:var(--muted);font-size:12px">${num(meta.reach)}人が見た ・ クリック ${num(meta.clicks)}</span>`:`<br><span style="color:var(--muted);font-size:12px">クリック ${num(meta.clicks)}</span>`}`:'<span style="color:var(--muted)">未入力</span>'}</span></div>
+      const has = v.entered || isTotal;
+      const dash = '<span class="none">—</span>';
+      const mem = has ? `${num(v.jitsudo)}<small>名</small>` : dash;
+      const memSub = [jitsuDiff==null ? '' : `前月比 <span class="${jitsuDiff>=0?'pos':'neg'}">${signed(jitsuDiff)}名</span>${diffNote?`（${esc(diffNote)}）`:''}`, has && kyukai ? `休会 ${num(kyukai)}名` : ''].filter(Boolean).join(' ・ ') || (has ? '' : '月次入力がまだありません');
+      const fl1 = fsum ? `${num(fsum)}<small>枚</small>` : dash;
+      const fl2 = fsum ? `${list.length}回${lf ? ` ・ 最終 ${mdate(lf.date)}${isTotal?'':' '+esc(lf.area||'')}` : ''}` : 'この月の報告なし';
+      const mt1 = meta ? `${num(meta.impr)}<small>回</small>` : dash;
+      const mt2 = meta ? `${meta.reach?`${num(meta.reach)}人が見た ・ `:''}クリック ${num(meta.clicks)}` : '未入力';
+      return `<div class="sum-store${isTotal?' total':''}">
+        <h3><span>${esc(title)}</span><span class="sub">${sub}</span></h3>
+        <div class="sum-pair">
+          <div class="sum-cell"><div class="l">会員数</div><div class="v num">${mem}</div><div class="d num">${memSub||'&nbsp;'}</div></div>
+          <div class="sum-cell"><div class="l">月会費売上</div><div class="v num">${has?yen(uri):dash}</div><div class="d num">${has&&v.jitsudo?`1名あたり ${yen(uri/v.jitsudo)}`:'&nbsp;'}</div></div>
+        </div>
+        <div class="sum-line"><div class="l">チラシ配布</div><div class="v num">${fl1}</div><div class="d">${fl2}</div></div>
+        <div class="sum-line"><div class="l">Meta広告 表示回数</div><div class="v num">${mt1}</div><div class="d">${mt2}</div></div>
       </div>`; };
     // 前月比は「両月とも入力がある店舗」だけで比べる（片方の店舗が初登録の月に大きく増えて見えないように）
     const pairs = rows.map((r,i)=>({r, pv:prevRows[i]})).filter(x=>x.r.v.entered && x.pv && x.pv.entered);
     const totDiff = pairs.length ? pairs.reduce((a,x)=>a+x.r.v.jitsudo-x.pv.jitsudo,0) : null;
-    const totSub = pairs.length && pairs.length<rows.length ? `${fmtMonth(selMonth)}（前月比は${pairs.map(x=>x.r.d.name).join('・')}のみ）` : fmtMonth(selMonth);
+    const totSub = fmtMonth(selMonth);
+    const totNote = pairs.length && pairs.length<rows.length ? `${pairs.map(x=>x.r.d.name.replace(/店$/,'')).join('・')}のみ` : '';
     $('sumStores').innerHTML = rows.map((r,i)=>{ const pv=prevRows[i]; const d = r.v.entered && pv && pv.entered ? r.v.jitsudo-pv.jitsudo : null;
-        const sub = r.actual ? '' : r.carriedFrom ? `${fmtMonth(r.carriedFrom).replace(/^\d+年/,'')}の会員数を表示` : '未登録';
+        const sub = r.actual ? `<span class="chip ok">登録済</span>` : r.carriedFrom ? `<span class="chip miss">${fmtMonth(r.carriedFrom).replace(/^\d+年/,'')}の値</span>` : `<span class="chip miss">未登録</span>`;
         return card(r.d.name, sub, r.v, Number(r.rec&&r.rec.kyukai)||0, r.v.uriage, d, flBy(r.d.id), metaOf(r.d.id), false); }).join('')
-      + card('両店 合計', totSub, {...tot, entered:true}, tot.kyukai, tot.uriage, totDiff, fl, metaOf(null), true);
+      + card('両店 合計', totSub, {...tot, entered:true}, tot.kyukai, tot.uriage, totDiff, fl, metaOf(null), true, totNote);
 
     // チラシ：店舗別と直近の報告
     const recent = fl.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);
