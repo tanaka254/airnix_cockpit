@@ -215,6 +215,25 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
 .ad-bar{position:relative;height:22px;display:flex;align-items:center;justify-content:flex-end}
 .ad-bar i{position:absolute;left:0;top:3px;bottom:3px;background:var(--accent-soft);border-radius:3px}
 .ad-bar span{position:relative}
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:18px}
+.sum-store{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.sum-store.total{background:var(--accent-soft)}
+.sum-store h3{margin:0 0 8px;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sum-store h3 .sub{font-size:11px;font-weight:400;color:var(--muted)}
+.sum-big{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.sum-big .l{font-size:11px;color:var(--muted)}
+.sum-big .v{font-size:22px;font-weight:700;line-height:1.15}
+.sum-big .d{font-size:11px;color:var(--muted)}
+.sum-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-top:1px dashed var(--line)}
+.sum-row:first-of-type{margin-top:10px}
+.sum-row .l{color:var(--muted);white-space:nowrap}
+.sum-row .v{text-align:right}
+.minibars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:6px}
+.minibars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--muted)}
+.minibars i{display:block;width:100%;max-width:34px;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+details.more>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--accent)}
+.ads-switch{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ads-switch button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -244,7 +263,7 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
   <button role="tab" aria-selected="false" data-tab="hypoxic">低酸素ルーム</button>
   <button role="tab" aria-selected="false" data-tab="news">周辺情報</button>
   <button role="tab" aria-selected="false" data-tab="portal">掲載サイト</button>
-  <button role="tab" aria-selected="false" data-tab="ads">Google広告</button>
+  <button role="tab" aria-selected="false" data-tab="ads">広告（Meta・Google）</button>
   <button role="tab" aria-selected="false" data-tab="trend">推移</button>
   <button role="tab" aria-selected="false" data-tab="rates">料金マスタ・目標</button>
 </nav>
@@ -260,6 +279,17 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
       <label>表示する月 <select id="dashMonth"></select></label>
       <span class="msg" id="dashNote"></span>
     </div>
+    <div class="sum-grid" id="sumStores"></div>
+    <div class="card">
+      <h2>チラシの配布状況 <span class="note">チラシ配布報告（フォーム・アプリ）の配布日で集計。地図は「チラシ配布」タブ</span></h2>
+      <div id="flyerSum"></div>
+    </div>
+    <div class="card">
+      <h2>Meta広告（Instagram・Facebook）の見られ方 <span class="note">数字は「広告」タブで月ごとに入力します</span></h2>
+      <div id="metaSum"></div>
+    </div>
+    <details class="more" id="dashMore">
+    <summary>くわしく見る（新規・退会・体験・目標・登録状況）</summary>
     <div class="kpis" id="kpis"></div>
     <div class="card">
       <h2>店舗別 当月実績 <span class="note">会員数は会員（在籍 − 休会）で数えます。月会費売上は各店舗に帰属。</span></h2>
@@ -285,6 +315,7 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
       <h2>退会 理由 × 区分 <span class="note">全店舗・当月。月次入力の「退会の内訳」を入れた分だけ集計されます</span></h2>
       <div class="tw"><table id="taikaiTable"></table></div>
     </div>
+    </details>
   </section>
 
   <!-- ===== Input ===== -->
@@ -304,6 +335,8 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
         <fieldset>
           <legend>会員数（区分別・月末時点）</legend>
           <div class="form-grid" id="memberFields"></div>
+          <div class="form-grid" id="memberExtra" style="margin-top:10px"></div>
+          <p class="hint" id="memberHint" style="margin:8px 0 0"></p>
         </fieldset>
         <fieldset>
           <legend>当月の動き</legend>
@@ -593,7 +626,11 @@ input[type="url"]{background:var(--input-bg);border:1px solid var(--line);border
   <!-- ===== 掲載サイト ===== -->
   <section id="tab-portal" hidden><div id="portalRoot"></div></section>
   <!-- ===== Google広告 ===== -->
-  <section id="tab-ads" hidden><div id="adsRoot"></div></section>
+  <section id="tab-ads" hidden>
+    <div class="ads-switch" role="group" aria-label="広告の種類"><button type="button" class="ghost" data-ads="meta" aria-pressed="true">Meta広告（Instagram・Facebook）</button><button type="button" class="ghost" data-ads="google" aria-pressed="false">Google広告</button></div>
+    <div id="metaAdsRoot"></div>
+    <div id="adsRoot" hidden></div>
+  </section>
 
   <!-- ===== Trend ===== -->
   <section id="tab-trend" hidden>
@@ -685,12 +722,26 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   const TAIKAI_REASONS = ['効果を感じない','通う時間がない（仕事・家庭）','費用','引っ越し・転勤','体調・けが','目標達成・満足','他のジムへ移った','予約が取りづらい','その他'];
   // 新機能のお知らせ（日付から7日間、ダッシュボード上部に表示。×で閉じると再表示しない）
   const RELEASE_NOTES = [
+    {date:'2026-10-30', items:['ダッシュボードの一番上に両店のまとめ（会員数・月会費売上・チラシ配布・Meta広告の表示回数）を表示。新規・退会などは「くわしく見る」で開きます','用賀店の料金をライト3,980円・メイン5,980円・プレミアム9,800円・休会1,100円・VIP0円に変更。野沢店に法人プラン（イルカ整骨院・1名5,500円）を追加。月次入力にはその店舗のプランだけが出ます','「広告」タブに Meta広告（Instagram・Facebook）を追加：消化金額・表示回数・リーチ・クリックを月ごとに入れると、ダッシュボードで先生方も見られます']},
     {date:'2026-10-06', items:["「掲載サイト」タブを追加：ポータル・福利厚生サービス・地図サービスの掲載状況を管理し、掲載先ごとの問い合わせ・体験・入会・費用を記録できます（調査済みの候補を取り込めます。Googleマップ・Yahoo!マップ・エキテンの掲載状況は10/6に確認した内容を店舗ごとに反映済み）","「Google広告」タブを追加：P-MAX の広告費・クリック・コンバージョンと、広告経由の問い合わせ・体験・入会から入会1人あたりの広告費を計算し、目標と比べます",'ターゲットを法人とスポーツチームに：「法人・チーム」タブを追加（調査済みの候補24件を取り込めます）。月次入力の新規に「法人契約」「スポーツチーム」を追加し、周辺情報は大人の人口と候補件数を表示']},
     {date:'2026-10-05', items:['AIRNIX COCKPIT を公開：会員数（プラン別）・新規の経路・退会理由・体験→入会率・チラシ配布マップ・スケジュール・パーソナル・低酸素ルームのプログラム設計を1か所で管理します']},
   ];
   const INST_ROLES = ['店長','トレーナー','パーソナルトレーナー','スタッフ'];
   const DEFAULT_INSTRUCTORS = [];
   const SHINKI_CATS = CATS.filter(([k])=>k!=='kyukai' && k!=='vip');
+  // その店舗で使うプラン（料金マスタで0円より大きいプラン＋会員に含める追加プラン）
+  const planOn = (dojoId,k) => Number(((rates[dojoId]||DEFAULT_RATES[dojoId]||{})[k]))>0;
+  function catsFor(dojoId){
+    return [...SHINKI_CATS.filter(([k])=>planOn(dojoId,k)),
+      ...extras.filter(x=>Number(x.member)===1 && Number(x.prices&&x.prices[dojoId])>0).map(x=>[x.id, x.name])];
+  }
+  /** 集計表の列：両店のプラン＋データにある区分 */
+  function catsForTable(keys){
+    const out=[], seen=new Set(); const add=(k,l)=>{ if(!seen.has(k)){ seen.add(k); out.push([k,l]); } };
+    DOJOS.forEach(d=>catsFor(d.id).forEach(([k,l])=>add(k,l)));
+    (keys||[]).forEach(k=>{ const c=CATS.find(x=>x[0]===k); const x=extras.find(e=>e.id===k); add(k, c?c[1]:x?x.name:k); });
+    return out;
+  }
   const RATE_COLS = [...CATS, ['nyukaikin','入会金'],['jimu','事務手数料']];
   const DEFAULT_RATES = {
     nozawa: {daytime:8800,weekend:8800,standard:9900,advance:11800,athlete:13200,hiathlete:0,dblathlete:17600,topathlete:22000,proathlete:33000,unlimited:0,kyukai:0,vip:0,nyukaikin:0,jimu:0},
@@ -764,7 +815,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   function renderEverything(){
       autoSelectMonth(); renderRates(); renderExtras(); renderInstructors(); renderExtraFields(); renderGoals(); renderAll(); renderFlyers(); renderPreview();
       if (!$('tab-personal').hidden) personalUI.render(); if (!$('tab-hypoxic').hidden) hypoxicUI.render(); if (!$('tab-b2b').hidden) b2bUI.render(); try { renderMarket(); } catch(e){}
-      if (!$('tab-sched').hidden) renderSched(); if (!$('tab-tasks').hidden && !tkEditing()) renderTasks(); if (!$('tab-tour').hidden) renderTour(); if (!$('tab-news').hidden) renderNews(); if (!$('tab-portal').hidden) portalUI.render(); if (!$('tab-ads').hidden) adsUI.render();
+      if (!$('tab-sched').hidden) renderSched(); if (!$('tab-tasks').hidden && !tkEditing()) renderTasks(); if (!$('tab-tour').hidden) renderTour(); if (!$('tab-news').hidden) renderNews(); if (!$('tab-portal').hidden) portalUI.render(); if (!$('tab-ads').hidden) { adsUI.render(); metaAdsUI.render(); }
       if (!(document.activeElement && document.activeElement.form === $('inputForm'))) loadForm();
   }
   async function refresh(silent){
@@ -773,7 +824,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       db = true; $('dbDot').className='dot on'; $('dbStatus').textContent='スプレッドシートと同期済み'; $('offlineBanner').hidden=true;
       autoSelectMonth(); renderRates(); renderExtras(); renderInstructors(); renderExtraFields(); renderGoals(); renderAll(); renderFlyers(); renderPreview();
       if (!$('tab-personal').hidden) personalUI.render(); if (!$('tab-hypoxic').hidden) hypoxicUI.render(); if (!$('tab-b2b').hidden) b2bUI.render(); try { renderMarket(); } catch(e){}
-      if (!$('tab-sched').hidden) renderSched(); if (!$('tab-tasks').hidden && !tkEditing()) renderTasks(); if (!$('tab-tour').hidden) renderTour(); if (!$('tab-news').hidden) renderNews(); if (!$('tab-portal').hidden) portalUI.render(); if (!$('tab-ads').hidden) adsUI.render();
+      if (!$('tab-sched').hidden) renderSched(); if (!$('tab-tasks').hidden && !tkEditing()) renderTasks(); if (!$('tab-tour').hidden) renderTour(); if (!$('tab-news').hidden) renderNews(); if (!$('tab-portal').hidden) portalUI.render(); if (!$('tab-ads').hidden) { adsUI.render(); metaAdsUI.render(); }
       if (!(document.activeElement && document.activeElement.form === $('inputForm'))) loadForm();
       return true;
     } catch(err){
@@ -814,6 +865,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
         const c = {};
         CATS.forEach(([k])=>{ c[k]=pr[k]; });
         MOVES.forEach(([k])=>{ c[k]=null; });
+        c.extra = pr.extra && typeof pr.extra==='object' ? {...pr.extra} : {};
         return {rec:c, carriedFrom:MONTHS[i]};
       }
     }
@@ -861,7 +913,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     const chirashi = g('chirashi');
     return {zaiseki, jitsudo, kakin, uriage, shinki, taikai, junzo: shinki - taikai,
       perHead: jitsudo? uriage/jitsudo : 0, hanno: chirashi? g('shinkiChirashi')/chirashi : 0, chirashi, taiken: g('taiken'),
-      entered: !!rec && CATS.some(([k])=>rec[k]!=null && rec[k]!=='')};
+      entered: !!rec && (CATS.some(([k])=>rec[k]!=null && rec[k]!=='') || Object.values(ex).some(n=>Number(n)>0))};
   }
 
   // ---------- tabs ----------
@@ -869,7 +921,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     document.querySelectorAll('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', String(x===b)));
     ['dash','input','flyer','sched','tasks','tour','news','trend','rates','personal','hypoxic','b2b'].concat(['portal','ads']).forEach(t => $('tab-'+t).hidden = (t!==b.dataset.tab));
     if (b.dataset.tab==='portal') portalUI.render();
-    if (b.dataset.tab==='ads') adsUI.render();
+    if (b.dataset.tab==='ads') { adsUI.render(); metaAdsUI.render(); }
     if (b.dataset.tab==='b2b') b2bUI.render();
     if (b.dataset.tab==='personal') personalUI.render();
     if (b.dataset.tab==='hypoxic') hypoxicUI.render();
@@ -896,6 +948,54 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     if (latest && latest !== selMonth){ selMonth = latest; $('dashMonth').value = latest; }
   }
 
+  function renderDashSummary(rows, tot, diff, prevRows){
+    const fl = flyers.filter(f=>String(f.date||'').slice(0,7)===selMonth);
+    const flBy = id => fl.filter(f=>f.dojo===id);
+    const mt = id => ads.find(r=>r.month===selMonth && r.target===id) || null;
+    const mv = (r,k) => r && r[k]!=null && r[k]!=='' ? Number(r[k]) : null;
+    const metaOf = id => { const rs = id ? [mt('meta_'+id)].filter(Boolean) : ads.filter(r=>r.month===selMonth && isMeta(r.target));
+      if (!rs.length) return null; const t={cost:0,impr:0,reach:0,clicks:0,any:false};
+      rs.forEach(r=>{ ['cost','impr','clicks'].forEach(k=>{ const v=mv(r,k); if(v!=null){ t[k]+=v; t.any=true; } }); const rc=mv(r,'conv'); if(rc!=null){ t.reach+=rc; t.any=true; } }); return t.any?t:null; };
+    const lastFl = list => list.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)))[0];
+    const mdate = d => { const x=String(d||'').slice(5).split('-'); return x.length===2?`${Number(x[0])}/${Number(x[1])}`:esc(d||''); };
+    const card = (title, sub, v, kyukai, uri, jitsuDiff, list, meta, isTotal) => {
+      const lf = lastFl(list); const fsum = list.reduce((a,f)=>a+(Number(f.count)||0),0);
+      return `<div class="sum-store${isTotal?' total':''}"><h3><span>${esc(title)}</span><span class="sub">${sub}</span></h3>
+        <div class="sum-big"><div><div class="l">会員数</div><div class="v num">${v.entered||isTotal?num(v.jitsudo)+'<span style="font-size:13px;font-weight:400"> 名</span>':'—'}</div><div class="d num">${jitsuDiff==null?(kyukai?`休会 ${num(kyukai)}名`:''):`前月比 <span class="${jitsuDiff>=0?'pos':'neg'}">${signed(jitsuDiff)}名</span>${kyukai?` ・ 休会 ${num(kyukai)}名`:''}`}</div></div>
+        <div><div class="l">月会費売上</div><div class="v num">${v.entered||isTotal?yen(uri):'—'}</div><div class="d num">${v.jitsudo?`1名あたり ${yen(uri/v.jitsudo)}`:''}</div></div></div>
+        <div class="sum-row"><span class="l">チラシ配布</span><span class="v num">${fsum?`<b>${num(fsum)}枚</b>（${list.length}回）${lf&&!isTotal?`<br><span style="color:var(--muted);font-size:12px">最終 ${mdate(lf.date)} ${esc(lf.area||'')}</span>`:''}`:'<span style="color:var(--muted)">この月の報告なし</span>'}</span></div>
+        <div class="sum-row"><span class="l">Meta広告 表示回数</span><span class="v num">${meta?`<b>${num(meta.impr)}回</b>${meta.reach?`<br><span style="color:var(--muted);font-size:12px">${num(meta.reach)}人が見た ・ クリック ${num(meta.clicks)}</span>`:`<br><span style="color:var(--muted);font-size:12px">クリック ${num(meta.clicks)}</span>`}`:'<span style="color:var(--muted)">未入力</span>'}</span></div>
+      </div>`; };
+    // 前月比は「両月とも入力がある店舗」だけで比べる（片方の店舗が初登録の月に大きく増えて見えないように）
+    const pairs = rows.map((r,i)=>({r, pv:prevRows[i]})).filter(x=>x.r.v.entered && x.pv && x.pv.entered);
+    const totDiff = pairs.length ? pairs.reduce((a,x)=>a+x.r.v.jitsudo-x.pv.jitsudo,0) : null;
+    const totSub = pairs.length && pairs.length<rows.length ? `${fmtMonth(selMonth)}（前月比は${pairs.map(x=>x.r.d.name).join('・')}のみ）` : fmtMonth(selMonth);
+    $('sumStores').innerHTML = rows.map((r,i)=>{ const pv=prevRows[i]; const d = r.v.entered && pv && pv.entered ? r.v.jitsudo-pv.jitsudo : null;
+        const sub = r.actual ? '' : r.carriedFrom ? `${fmtMonth(r.carriedFrom).replace(/^\d+年/,'')}の会員数を表示` : '未登録';
+        return card(r.d.name, sub, r.v, Number(r.rec&&r.rec.kyukai)||0, r.v.uriage, d, flBy(r.d.id), metaOf(r.d.id), false); }).join('')
+      + card('両店 合計', totSub, {...tot, entered:true}, tot.kyukai, tot.uriage, totDiff, fl, metaOf(null), true);
+
+    // チラシ：店舗別と直近の報告
+    const recent = fl.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,8);
+    $('flyerSum').innerHTML = `<div class="tw"><table><thead><tr><th style="text-align:left">店舗</th><th>${fmtMonth(selMonth)} 配布枚数</th><th>配布回数</th><th>配った人</th><th>新規：チラシ</th><th>反応率</th><th style="text-align:left">最後に配った日・場所</th></tr></thead><tbody>${
+      rows.map(r=>{ const l=flBy(r.d.id); const c=l.reduce((a,f)=>a+(Number(f.count)||0),0); const by=[...new Set(l.map(f=>f.by).filter(Boolean))]; const lf=lastFl(l); const sh=Number(r.rec&&r.rec.shinkiChirashi)||0;
+        return `<tr><td style="text-align:left">${esc(r.d.name)}</td><td class="num"><b>${num(c)}</b></td><td class="num">${num(l.length)}</td><td class="num">${num(by.length)}人</td><td class="num">${r.actual?num(sh):'—'}</td><td class="num">${r.actual?fmtHanno(sh,c,false):'—'}</td><td style="text-align:left">${lf?`${mdate(lf.date)} ${esc(lf.area||'')}`:'—'}</td></tr>`; }).join('')
+    }<tr class="total"><td>合計</td><td class="num">${num(fl.reduce((a,f)=>a+(Number(f.count)||0),0))}</td><td class="num">${num(fl.length)}</td><td class="num">${num(new Set(fl.map(f=>f.by).filter(Boolean)).size)}人</td><td></td><td></td><td></td></tr></tbody></table></div>`
+      + (recent.length ? `<h3 style="font-size:13px;margin:12px 0 6px;color:var(--muted)">最近の報告</h3><div class="tw"><table><thead><tr><th style="text-align:left">配布日</th><th style="text-align:left">店舗</th><th>枚数</th><th style="text-align:left">エリア</th><th style="text-align:left">配った人</th></tr></thead><tbody>${recent.map(f=>`<tr><td style="text-align:left">${mdate(f.date)}</td><td style="text-align:left">${esc((DOJOS.find(d=>d.id===f.dojo)||{}).name||f.dojo)}</td><td class="num">${num(f.count)}</td><td style="text-align:left">${esc(f.area||'')}</td><td style="text-align:left">${esc(f.by||'')}</td></tr>`).join('')}</tbody></table></div>` : `<p class="hint">${fmtMonth(selMonth)}のチラシ配布報告はまだありません。</p>`)
+      + `<div class="actions" style="margin-top:8px"><button type="button" class="ghost" id="goFlyer" style="padding:5px 12px">配布マップ・報告の一覧を見る</button></div>`;
+    $('goFlyer').addEventListener('click', ()=>showTab('flyer'));
+
+    // Meta広告
+    const mrow = (name, t) => `<tr><td style="text-align:left">${esc(name)}</td>${t?`<td class="num"><b>${num(t.impr)}</b></td><td class="num">${t.reach?num(t.reach):'—'}</td><td class="num">${t.reach?(t.impr/t.reach).toFixed(1)+'回':'—'}</td><td class="num">${num(t.clicks)}</td><td class="num">${t.impr?(t.clicks/t.impr*100).toFixed(2)+'%':'—'}</td><td class="num">${yen(t.cost)}</td><td class="num">${t.impr?yen(t.cost/t.impr*1000):'—'}</td>`:`<td colspan="7" style="color:var(--muted);text-align:center">未入力</td>`}</tr>`;
+    const common = mt('meta_all'); const cm = common ? (()=>{ const t={cost:mv(common,'cost')||0,impr:mv(common,'impr')||0,reach:mv(common,'conv')||0,clicks:mv(common,'clicks')||0}; return (t.cost||t.impr||t.clicks||t.reach)?t:null; })() : null;
+    const hist = MONTHS.filter(m=>m<=selMonth).slice(-6).map(m=>({m, v: ads.filter(r=>r.month===m && isMeta(r.target)).reduce((a,r)=>a+(Number(r.impr)||0),0)}));
+    const hmax = Math.max(1, ...hist.map(h=>h.v));
+    $('metaSum').innerHTML = `<div class="tw"><table><thead><tr><th style="text-align:left">店舗</th><th>表示回数</th><th>リーチ（見た人数）</th><th>1人あたり</th><th>クリック</th><th>クリック率</th><th>消化金額</th><th>1,000回表示あたり</th></tr></thead><tbody>${
+      rows.map(r=>mrow(r.d.name, metaOf(r.d.id))).join('') + (cm ? mrow('両店（共通）', cm) : '')}${metaOf(null)?`<tr class="total"><td>合計</td>${(()=>{ const t=metaOf(null); return `<td class="num">${num(t.impr)}</td><td class="num">${t.reach?num(t.reach):'—'}</td><td class="num">—</td><td class="num">${num(t.clicks)}</td><td class="num">${t.impr?(t.clicks/t.impr*100).toFixed(2)+'%':'—'}</td><td class="num">${yen(t.cost)}</td><td class="num">${t.impr?yen(t.cost/t.impr*1000):'—'}</td>`; })()}</tr>`:''}</tbody></table></div>
+      <h3 style="font-size:13px;margin:12px 0 0;color:var(--muted)">表示回数の推移（両店合計・直近6か月）</h3>
+      <div class="minibars" role="img" aria-label="Meta広告 表示回数の推移">${hist.map(h=>`<div><span class="num">${h.v?num(h.v):''}</span><i style="height:${Math.round(h.v/hmax*48)}px"></i>${fmtMonth(h.m).replace(/^\d+年/,'')}</div>`).join('')}</div>
+      <p class="hint" style="margin:8px 0 0">リーチの合計は店舗ごとの単純な足し算です（両店の広告を両方見た人は2人と数えます）。リーチが同じでも表示回数が増えれば、同じ人に何度も出ています。</p>`;
+  }
   function renderDash(){
     const rows = DOJOS.map(d => { const e = effRec(selMonth, d.id); const v = derive(e.rec, d.id, selMonth); return {d, rec:e.rec, v, carriedFrom:e.carriedFrom, actual: !e.carriedFrom && v.entered}; });
     const entered = rows.filter(r=>r.actual);
@@ -915,6 +1015,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     const prevEntered = prevRows.some(v=>v.entered);
     const diff = ((entered.length||carried.length) && prevEntered) ? tot.jitsudo - prevTot : null;
 
+    renderDashSummary(rows, tot, diff, prevRows);
     $('kpis').innerHTML = [
       ['会員数 合計', num(tot.jitsudo)+'名', diff==null?'前月比 —':`前月比 <span class="${diff>=0?'pos':'neg'}">${signed(diff)}名</span>`],
       ['在籍 ／ 休会', `${num(tot.zaiseki)}<span style="font-size:14px;color:var(--muted)"> ／ ${num(tot.kyukai)}名</span>`, '在籍 − 休会 ＝ 会員'],
@@ -968,7 +1069,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     rows.forEach(r=>{ const sd=r.rec&&r.rec.shinkiDetail; if(!sd) return; Object.entries(sd).forEach(([rt,m])=>{ Object.entries(m||{}).forEach(([c,n])=>{ n=Number(n)||0; if(n>0){ rcAny=true; (rc[rt]=rc[rt]||{})[c]=(rc[rt][c]||0)+n; } }); }); });
     if (!rcAny){ $('routeCatTable').innerHTML = `<tbody><tr><td style="text-align:center;color:var(--muted)">この月はまだ内訳が入力されていません</td></tr></tbody>`; }
     else {
-      const ct={}; let gt=0;
+      const SHINKI_CATS = catsForTable(Object.values(rc).flatMap(m=>Object.keys(m))); const ct={}; let gt=0;
       $('routeCatTable').innerHTML = `<thead><tr><th style="text-align:left">経路＼区分</th>${SHINKI_CATS.map(([,l])=>`<th>${l}</th>`).join('')}<th>合計</th></tr></thead><tbody>` +
         ROUTES.map(([rt,l])=>{ const m=rc[rt]||{}; const t=Object.values(m).reduce((a,b)=>a+b,0); gt+=t; SHINKI_CATS.forEach(([c])=>{ ct[c]=(ct[c]||0)+(m[c]||0); });
           return `<tr><td>${l}</td>${SHINKI_CATS.map(([c])=>`<td class="num">${m[c]?num(m[c]):'—'}</td>`).join('')}<td class="num"><b>${num(t)}</b></td></tr>`; }).join('') +
@@ -979,7 +1080,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     rows.forEach(r=>{ const td=r.rec&&r.rec.taikaiDetail; if(!Array.isArray(td)) return; td.forEach(x=>{ const n=Number(x.n)||0; if(n>0){ tkAny=true; (tk[x.reason]=tk[x.reason]||{})[x.cat]=(tk[x.reason][x.cat]||0)+n; if (x.memo) memos.push(`${r.d.name}：${x.memo}`); } }); });
     if (!tkAny){ $('taikaiTable').innerHTML = `<tbody><tr><td style="text-align:center;color:var(--muted)">この月はまだ退会の内訳が入力されていません</td></tr></tbody>`; }
     else {
-      const ct={}; let gt=0; const reasons=[...TAIKAI_REASONS, ...Object.keys(tk).filter(r=>!TAIKAI_REASONS.includes(r))].filter(r=>tk[r]);
+      const SHINKI_CATS = catsForTable(Object.values(tk).flatMap(m=>Object.keys(m))); const ct={}; let gt=0; const reasons=[...TAIKAI_REASONS, ...Object.keys(tk).filter(r=>!TAIKAI_REASONS.includes(r))].filter(r=>tk[r]);
       $('taikaiTable').innerHTML = `<thead><tr><th style="text-align:left">理由＼区分</th>${SHINKI_CATS.map(([,l])=>`<th>${l}</th>`).join('')}<th>合計</th><th>割合</th></tr></thead><tbody>` +
         reasons.map(rs=>{ const m=tk[rs]; const t=Object.values(m).reduce((a,b)=>a+b,0); gt+=t; SHINKI_CATS.forEach(([c])=>{ ct[c]=(ct[c]||0)+(m[c]||0); }); return {rs,m,t}; })
           .map(({rs,m,t})=>`<tr><td>${esc(rs)}</td>${SHINKI_CATS.map(([c])=>`<td class="num">${m[c]?num(m[c]):'—'}</td>`).join('')}<td class="num"><b>${num(t)}</b></td><td class="num">${(t/gt*100).toFixed(0)}%</td></tr>`).join('') +
@@ -1010,7 +1111,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   function renderTaikaiRows(){
     const t=$('taikaiRows');
     t.innerHTML = taikaiRows.length ? `<thead><tr><th style="text-align:left">区分</th><th style="text-align:left">理由</th><th>人数</th><th style="text-align:left">メモ（任意）</th><th></th></tr></thead><tbody>` +
-      taikaiRows.map((r,i)=>`<tr data-i="${i}"><td><select data-k="cat">${SHINKI_CATS.map(([c,l])=>`<option value="${c}"${c===r.cat?' selected':''}>${l}</option>`).join('')}</select></td><td><select data-k="reason">${TAIKAI_REASONS.map(x=>`<option${x===r.reason?' selected':''}>${x}</option>`).join('')}</select></td><td><input type="number" min="1" step="1" inputmode="numeric" data-k="n" value="${r.n||1}" style="width:64px"></td><td><input type="text" data-k="memo" value="${esc(r.memo||'')}" placeholder="例：中学進学で部活へ" style="min-width:160px"></td><td><button type="button" class="ghost" data-del="${i}" style="padding:3px 8px;font-size:12px">削除</button></td></tr>`).join('') + '</tbody>'
+      taikaiRows.map((r,i)=>`<tr data-i="${i}"><td><select data-k="cat">${(()=>{ const cs=catsFor(inDojo); return r.cat && !cs.some(c=>c[0]===r.cat) ? [...cs, ...catsForTable([r.cat]).filter(c=>c[0]===r.cat)] : cs; })().map(([c,l])=>`<option value="${c}"${c===r.cat?' selected':''}>${l}</option>`).join('')}</select></td><td><select data-k="reason">${TAIKAI_REASONS.map(x=>`<option${x===r.reason?' selected':''}>${x}</option>`).join('')}</select></td><td><input type="number" min="1" step="1" inputmode="numeric" data-k="n" value="${r.n||1}" style="width:64px"></td><td><input type="text" data-k="memo" value="${esc(r.memo||'')}" placeholder="例：中学進学で部活へ" style="min-width:160px"></td><td><button type="button" class="ghost" data-del="${i}" style="padding:3px 8px;font-size:12px">削除</button></td></tr>`).join('') + '</tbody>'
       : `<tbody><tr><td style="color:var(--muted);font-size:13px">退会者がいる月は「＋ 退会を追加」で区分と理由を選んでください（いなければ空のまま）</td></tr></tbody>`;
     t.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ()=>{ readTaikaiRows(); taikaiRows.splice(Number(b.dataset.del),1); renderTaikaiRows(); syncTaikaiTotal(); renderPreview(); }));
     t.querySelectorAll('input,select').forEach(el=>el.addEventListener('change', ()=>{ readTaikaiRows(); syncTaikaiTotal(); renderPreview(); }));
@@ -1025,9 +1126,11 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     if (taikaiRows.length){ f.value = taikaiRows.reduce((s,r)=>s+(Number(r.n)||0),0) || ''; f.readOnly=true; f.style.background='var(--surface2, #f3f1ec)'; f.title='内訳の合計（自動）'; }
     else { f.readOnly=false; f.style.background=''; f.title=''; }
   }
-  $('taikaiAdd').addEventListener('click', ()=>{ readTaikaiRows(); taikaiRows.push({cat:'shonen', reason:TAIKAI_REASONS[TAIKAI_REASONS.length-1], n:1, memo:''}); renderTaikaiRows(); renderPreview(); });
+  $('taikaiAdd').addEventListener('click', ()=>{ readTaikaiRows(); taikaiRows.push({cat:(catsFor(inDojo)[0]||SHINKI_CATS[0])[0], reason:TAIKAI_REASONS[TAIKAI_REASONS.length-1], n:1, memo:''}); renderTaikaiRows(); renderPreview(); });
   function renderShinkiMatrix(rec){
     const sd = (rec && rec.shinkiDetail) || {};
+    const used = Object.values(sd).flatMap(m=>Object.keys(m||{}));
+    const SHINKI_CATS = [...catsFor(inDojo), ...catsForTable(used).filter(([k])=>used.includes(k) && !catsFor(inDojo).some(c=>c[0]===k))];
     $('shinkiMatrix').innerHTML = `<thead><tr><th style="text-align:left">経路＼区分</th>${SHINKI_CATS.map(([,l])=>`<th>${l}</th>`).join('')}<th>合計</th></tr></thead><tbody>` +
       ROUTES.map(([r,rl])=>`<tr><td style="white-space:nowrap">新規：${rl}</td>${SHINKI_CATS.map(([c])=>`<td><input type="number" min="0" step="1" inputmode="numeric" data-r="${r}" data-c="${c}" value="${sd[r]&&sd[r][c]?sd[r][c]:''}" style="width:64px"></td>`).join('')}<td class="num" data-rt="${r}">0</td></tr>`).join('') +
       `<tr class="total"><td>合計</td>${SHINKI_CATS.map(([c])=>`<td class="num" data-ct="${c}">0</td>`).join('')}<td class="num" data-gt>0</td></tr></tbody>`;
@@ -1042,15 +1145,29 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     const ct = {}; let gt=0;
     ROUTES.forEach(([r])=>{ const m=sd[r]||{}; const t=Object.values(m).reduce((a,b)=>a+b,0); const cell=$('shinkiMatrix').querySelector(`[data-rt="${r}"]`); if(cell) cell.textContent=num(t); gt+=t; Object.entries(m).forEach(([c,n])=>{ ct[c]=(ct[c]||0)+n; });
       const f=$('f_'+r); if (f){ if (any){ f.value=t||''; f.readOnly=true; f.style.background='var(--surface2, #f3f1ec)'; f.title='内訳の合計（自動）'; } else { f.readOnly=false; f.style.background=''; f.title=''; } } });
-    SHINKI_CATS.forEach(([c])=>{ const cell=$('shinkiMatrix').querySelector(`[data-ct="${c}"]`); if(cell) cell.textContent=num(ct[c]||0); });
+    $('shinkiMatrix').querySelectorAll('[data-ct]').forEach(cell=>{ cell.textContent=num(ct[cell.dataset.ct]||0); });
     const g=$('shinkiMatrix').querySelector('[data-gt]'); if(g) g.textContent=num(gt);
   }
   function renderExtraFields(){
     const rec = monthly[key(inMonth,inDojo)];
-    $('extraFieldset').hidden = !extras.length;
-    $('extraFields').innerHTML = extras.map(x=>`<div class="field"><label for="x_${esc(x.id)}">${esc(x.name)}${Number(x.member)===1?'':'（オプション）'} <span class="note">${yen(Number(x.prices&&x.prices[inDojo])||0)}/月</span></label><input type="number" min="0" step="1" id="x_${esc(x.id)}" data-x="${esc(x.id)}" inputmode="numeric" value="${rec&&rec.extra&&rec.extra[x.id]?rec.extra[x.id]:''}"></div>`).join('');
+    const has = x => rec && rec.extra && Number(rec.extra[x.id])>0;
+    const plans = extras.filter(x=>Number(x.member)===1 && (Number(x.prices&&x.prices[inDojo])>0 || has(x)));
+    const opts = extras.filter(x=>Number(x.member)!==1 && (Number(x.prices&&x.prices[inDojo])>0 || has(x)));
+    $('extraFieldset').hidden = !opts.length;
+    $('memberExtra').innerHTML = plans.map(x=>`<div class="field"><label for="x_${esc(x.id)}">${esc(x.name)} <span class="note">${yen(Number(x.prices&&x.prices[inDojo])||0)}/月</span></label><input type="number" min="0" step="1" id="x_${esc(x.id)}" data-x="${esc(x.id)}" inputmode="numeric" value="${has(x)?rec.extra[x.id]:''}"></div>`).join('');
+    showStorePlans(rec);
+    $('extraFields').innerHTML = opts.map(x=>`<div class="field"><label for="x_${esc(x.id)}">${esc(x.name)}${Number(x.member)===1?'':'（オプション）'} <span class="note">${yen(Number(x.prices&&x.prices[inDojo])||0)}/月</span></label><input type="number" min="0" step="1" id="x_${esc(x.id)}" data-x="${esc(x.id)}" inputmode="numeric" value="${rec&&rec.extra&&rec.extra[x.id]?rec.extra[x.id]:''}"></div>`).join('');
   }
 
+  /** 月次入力の会員数欄：その店舗のプラン（料金が0円より大きい）と休会・VIPだけを出す。値が入っている欄は残す */
+  function showStorePlans(rec){
+    const r = rates[inDojo] || DEFAULT_RATES[inDojo] || {}; let hidden=0;
+    CATS.forEach(([k,l])=>{ const el=$('f_'+k); if(!el) return; const fld=el.closest('.field');
+      const show = k==='kyukai' || k==='vip' || planOn(inDojo,k) || (rec && rec[k]!=null && rec[k]!=='' && Number(rec[k])>0);
+      fld.hidden = !show; if(!show) hidden++;
+      const lb=fld.querySelector('label'); if (lb) lb.innerHTML = `${esc(l)} <span class="note">${yen(Number(r[k])||0)}/月</span>`; });
+    $('memberHint').textContent = hidden ? `この店舗で使っていないプラン（料金0円）は表示していません。プランの追加・料金の変更は「料金マスタ・目標」タブで。` : '';
+  }
   function loadForm(){
     const rec = monthly[key(inMonth,inDojo)];
     fieldEls().forEach(el => { const v = rec ? rec[el.dataset.k] : undefined; el.value = (v==null||v==='')?'':v; });
@@ -1836,14 +1953,15 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
   function createAdsPage(o){
     // o: { root, allLabel, targets:[{id,name,match:[]}], getAds, getDaily, getSettings, saveAds(month, rows), saveSettings(v), webJoins(month, id), webLabel }
     const root = o.root; const st = { month: nowMonth, dirty: false };
-    const TG = [...o.targets, {id:'all', name:o.allLabel, match:[]}];
-    const F = [['cost','広告費（円）',true],['impr','表示回数'],['clicks','クリック'],['conv','コンバージョン'],['inquiries','問い合わせ'],['trials','体験'],['joins','入会']];
+    const TG = [...o.targets, {id:o.allId||'all', name:o.allLabel, match:[]}];
+    const F = [['cost','広告費（円）',true],['impr','表示回数'],['clicks','クリック'],['conv','コンバージョン'],['inquiries','問い合わせ'],['trials','体験'],['joins','入会']].map(f=>o.labels&&o.labels[f[0]]?[f[0],o.labels[f[0]],f[2]]:f);
+    const L = k => (F.find(f=>f[0]===k)||[])[1]||k;
     const sum = rows => { const t = Object.fromEntries(F.map(f=>[f[0],0])); rows.forEach(r=>F.forEach(([k])=>{ t[k]+=Number(r[k])||0; })); return t; };
     const targetOf = camp => { const c = String(camp||''); const hit = o.targets.find(t=>(t.match||[t.name]).some(m=>m && c.includes(m))); return hit ? hit.id : 'all'; };
     root.innerHTML = `
       <div class="kpis" id="adKpis"></div>
       <div class="card">
-        <h2>月次の数字 <span class="note">Google広告（P-MAX）の広告費・表示回数・クリック・コンバージョンと、実際に来た問い合わせ・体験・入会を入れます。入会は「広告を見て来た人」だけを数えます</span></h2>
+        <h2>${esc(o.title||'月次の数字')} <span class="note">${o.intro||'Google広告（P-MAX）の広告費・表示回数・クリック・コンバージョンと、実際に来た問い合わせ・体験・入会を入れます。入会は「広告を見て来た人」だけを数えます'}</span></h2>
         <div class="tk-filters"><label>月 <select id="adMonth"></select></label><button type="button" class="ghost" id="adFill" hidden>Google広告の数字で埋める</button><button type="button" class="primary" id="adSave">保存</button><span class="msg" id="adMsg"></span></div>
         <div class="tw"><table id="adTable"></table></div>
         <div id="adAuto"></div>
@@ -1853,7 +1971,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
         <div class="tk-filters"><label>対象 <select id="adTrendTarget"><option value="">すべて合計</option>${TG.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')}</select></label></div>
         <div class="tw"><table id="adTrend"></table></div>
       </div>
-      <div class="card">
+      <div class="card"${o.noSettings?' hidden':''}>
         <h2>目標 <span class="note">入会1人あたりにかけてよい広告費の上限です。目安は「月会費 × 平均の在籍月数 × 3割」ほど</span></h2>
         <div class="form-grid">
           <div class="field"><label for="adTargetCpa">目標の入会単価（円）</label><input type="number" id="adTargetCpa" min="0" step="1000"></div>
@@ -1862,7 +1980,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
         </div>
         <div class="actions" style="margin-top:10px"><button type="button" class="primary" id="adSetSave">目標を保存</button><span class="msg" id="adSetMsg"></span></div>
       </div>
-      <div class="card">
+      ${o.guide || `<div class="card">
         <h2>正しく測るための準備 <span class="note">一度設定すれば、あとは毎月の入力だけです</span></h2>
         <ol class="ad-steps">
           <li><b>コンバージョンを設定</b>：Google広告の「目標」で、体験申込・問い合わせフォームの送信完了、電話番号のタップ、LINE友だち追加を登録します。設定がないと P-MAX は何を増やせばよいか分からず、クリックだけを集めがちです。</li>
@@ -1871,10 +1989,10 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
           <li><b>広告の数字を自動で取り込む（任意）</b>：同封の「Google広告スクリプト」を Google広告の「ツール → スクリプト」に貼り付けて毎日実行すると、スプレッドシートの『広告_日次』シートに日別の数字が入り、この画面の「Google広告の数字で埋める」で入力できます。キャンペーン名に${o.targets.map(t=>'「'+esc((t.match||[t.name])[0])+'」').join('')}を入れておくと、自動で振り分けます。</li>
           <li><b>判断の目安</b>：3か月続けて入会単価が目標を上回るなら、広告文・画像・対象地域（半径）を見直します。コンバージョンは多いのに体験が少ない場合は、計測の重複（同じ人の二重カウント）を疑います。</li>
         </ol>
-      </div>`;
+      </div>`}`;
     const $q = id => root.querySelector('#'+id);
     $q('adMonth').innerHTML = MONTHS.map(m=>`<option value="${m}"${m===st.month?' selected':''}>${fmtMonth(m)}</option>`).join('');
-    const settings = () => o.getSettings() || {};
+    const settings = () => (o.noSettings ? {} : o.getSettings()) || {};
     function rowsFor(m){ return o.getAds().filter(r=>r.month===m); }
     function dailyFor(m){ return (o.getDaily()||[]).filter(r=>r.month===m); }
     function derived(t, s){
@@ -1886,13 +2004,13 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       const m = st.month, s = settings(); const t = sum(rowsFor(m)); const d = derived(t, s);
       const web = TG.reduce((a,x)=>a+(Number(o.webJoins ? o.webJoins(m, x.id) : 0)||0), 0);
       const items = [
-        [`${fmtMonth(m)} 広告費`, yen(t.cost), s.budget ? `予算 ${yen(s.budget)} の ${Math.round(t.cost/s.budget*100)}%` : ''],
-        ['クリック', num(t.clicks), `表示 ${num(t.impr)}回 ・ クリック率 ${pct(d.ctr)}`],
-        ['1クリックの単価', yenOr(d.cpc), ''],
-        ['コンバージョン', num(t.conv), `クリックの ${pct(d.cvr)}`],
+        [`${fmtMonth(m)} ${L('cost').replace('（円）','')}`, yen(t.cost), s.budget ? `予算 ${yen(s.budget)} の ${Math.round(t.cost/s.budget*100)}%` : ''],
+        [L('impr'), num(t.impr)+'回', o.reachKey ? `${L('conv')} ${num(t.conv)}人${t.conv?` ・ 1人あたり ${(t.impr/t.conv).toFixed(1)}回`:''}` : `1,000回表示あたり ${t.impr?yen(t.cost/t.impr*1000):'—'}`],
+        [L('clicks'), num(t.clicks), `クリック率 ${pct(d.ctr)} ・ 1クリック ${yenOr(d.cpc)}`],
+        ...(o.reachKey ? [] : [[L('conv'), num(t.conv), `クリックの ${pct(d.cvr)}`]]),
         ['問い合わせ・体験', `${num(t.inquiries)}<span style="font-size:13px;color:var(--muted)"> / ${num(t.trials)}</span>`, `体験1人あたり ${yenOr(d.tcpa)}`],
         ['広告経由の入会', num(t.joins)+'人', d.t2j!=null ? `体験→入会 ${pct(d.t2j)}` : ''],
-        ['入会1人あたり広告費', `<span style="color:${d.over===true?'var(--bad)':d.over===false?'var(--good)':'inherit'}">${yenOr(d.cpa)}</span>`, s.targetCpa ? `目標 ${yen(s.targetCpa)}${d.over===true?'（上回っています）':d.over===false?'（目標内）':''}` : '目標は下の「目標」で設定'],
+        ['入会1人あたり広告費', `<span style="color:${d.over===true?'var(--bad)':d.over===false?'var(--good)':'inherit'}">${yenOr(d.cpa)}</span>`, s.targetCpa ? `目標 ${yen(s.targetCpa)}${d.over===true?'（上回っています）':d.over===false?'（目標内）':''}` : (o.noSettings ? '' : '目標は下の「目標」で設定')],
       ];
       if (o.webJoins) items.push([`${o.webShort||'月次入力 新規(web)'}`, num(web)+'人', '参考：月次入力の「新規：SNS・web」の合計']);
       $q('adKpis').innerHTML = items.map(([l,v,dd])=>`<div class="kpi"><div class="l">${l}</div><div class="v num">${v}</div>${dd?`<div class="d">${dd}</div>`:''}</div>`).join('');
@@ -1912,6 +2030,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       // Google広告スクリプトで取り込んだ日次データ
       const daily = dailyFor(m);
       $q('adFill').hidden = !daily.length;
+      if (o.noDaily){ $q('adAuto').innerHTML = o.autoNote || ''; return; }
       $q('adAuto').innerHTML = daily.length ? `<h3 style="font-size:14px;margin:14px 0 6px">Google広告から自動で取り込んだ数字（${fmtMonth(m)}・キャンペーン別）</h3>
         <div class="tw"><table><thead><tr><th style="text-align:left">キャンペーン</th><th style="text-align:left">振り分け先</th><th>広告費</th><th>表示回数</th><th>クリック</th><th>コンバージョン</th><th>日数</th><th>最終日</th></tr></thead><tbody>
         ${daily.map(r=>`<tr><td style="text-align:left">${esc(r.campaign)}</td><td style="text-align:left">${esc((TG.find(t=>t.id===targetOf(r.campaign))||{}).name)}</td><td class="num">${yen(r.cost)}</td><td class="num">${num(r.impr)}</td><td class="num">${num(r.clicks)}</td><td class="num">${(Number(r.conv)||0).toFixed(1).replace(/\.0$/,'')}</td><td class="num">${num(r.days||0)}</td><td class="num">${esc(r.last||'')}</td></tr>`).join('')}
@@ -1923,10 +2042,10 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
       const months = MONTHS.filter(m=>all.some(r=>r.month===m) || (o.getDaily()||[]).some(r=>r.month===m));
       if (!months.length){ $q('adTrend').innerHTML = `<tbody><tr><td style="color:var(--muted);text-align:center;padding:14px">まだ数字がありません。上の「月次の数字」に入れると、月ごとの推移がここに並びます</td></tr></tbody>`; return; }
       const maxCost = Math.max(1, ...months.map(m=>sum(all.filter(r=>r.month===m)).cost));
-      $q('adTrend').innerHTML = `<thead><tr><th style="text-align:left">月</th><th>広告費</th><th>クリック</th><th>クリック率</th><th>コンバージョン</th><th>問い合わせ</th><th>体験</th><th>入会</th><th>体験単価</th><th>入会単価</th><th>新規(web)</th></tr></thead><tbody>
+      $q('adTrend').innerHTML = `<thead><tr><th style="text-align:left">月</th><th>${esc(L('cost').replace('（円）',''))}</th><th>${esc(L('impr'))}</th><th>${esc(L('clicks'))}</th><th>クリック率</th><th>${esc(L('conv'))}</th><th>問い合わせ</th><th>体験</th><th>入会</th><th>体験単価</th><th>入会単価</th><th>新規(web)</th></tr></thead><tbody>
         ${months.map(m=>{ const t=sum(all.filter(r=>r.month===m)); const d=derived(t, s);
           const web = o.webJoins ? (tg ? o.webJoins(m, tg) : TG.reduce((a,x)=>a+(Number(o.webJoins(m, x.id))||0),0)) : null;
-          return `<tr><td style="text-align:left;white-space:nowrap">${fmtMonth(m)}</td><td class="num" style="min-width:120px"><div class="ad-bar"><i style="width:${Math.round(t.cost/maxCost*100)}%"></i><span>${yen(t.cost)}</span></div></td><td class="num">${num(t.clicks)}</td><td class="num">${pct(d.ctr)}</td><td class="num">${num(t.conv)}</td><td class="num">${num(t.inquiries)}</td><td class="num">${num(t.trials)}</td><td class="num">${num(t.joins)}</td>
+          return `<tr><td style="text-align:left;white-space:nowrap">${fmtMonth(m)}</td><td class="num" style="min-width:120px"><div class="ad-bar"><i style="width:${Math.round(t.cost/maxCost*100)}%"></i><span>${yen(t.cost)}</span></div></td><td class="num">${num(t.impr)}</td><td class="num">${num(t.clicks)}</td><td class="num">${pct(d.ctr)}</td><td class="num">${num(t.conv)}</td><td class="num">${num(t.inquiries)}</td><td class="num">${num(t.trials)}</td><td class="num">${num(t.joins)}</td>
             <td class="num" style="${d.tover===true?'color:var(--bad)':''}">${yenOr(d.tcpa)}</td><td class="num" style="${d.over===true?'color:var(--bad);font-weight:700':d.over===false?'color:var(--good);font-weight:700':''}">${yenOr(d.cpa)}</td><td class="num" style="color:var(--muted)">${web==null?'—':num(web)}</td></tr>`; }).join('')}</tbody>`;
     }
     function renderSettings(){ const s = settings(); [['adTargetCpa','targetCpa'],['adBudget','budget'],['adTargetTrialCpa','targetTrialCpa']].forEach(([id,k])=>{ if (document.activeElement!==$q(id)) $q(id).value = s[k]==null?'':s[k]; }); }
@@ -1941,7 +2060,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     $q('adSave').addEventListener('click', async ()=>{
       const rows = {}; $q('adTable').querySelectorAll('input[data-t]').forEach(el=>{ const r = rows[el.dataset.t] || (rows[el.dataset.t] = {target:el.dataset.t}); r[el.dataset.k] = el.type==='number' ? (el.value===''?'':Number(el.value)) : el.value.trim(); });
       const msg=$q('adMsg'); msg.className='msg'; msg.textContent='保存中…';
-      try { await o.saveAds(st.month, Object.values(rows)); msg.className='msg ok'; msg.textContent=`${fmtMonth(st.month)}の数字を保存しました`; st.dirty=false; renderAll(); } catch(e){ msg.className='msg err'; msg.textContent=errText(e); }
+      try { await o.saveAds(st.month, Object.values(rows)); msg.className='msg ok'; msg.textContent=`${fmtMonth(st.month)}の数字を保存しました`; st.dirty=false; renderAll(); if (o.onSaved) o.onSaved(); } catch(e){ msg.className='msg err'; msg.textContent=errText(e); }
     });
     $q('adSetSave').addEventListener('click', async ()=>{
       const v = {}; [['adTargetCpa','targetCpa'],['adBudget','budget'],['adTargetTrialCpa','targetTrialCpa']].forEach(([id,k])=>{ const x=$q(id).value; v[k] = x==='' ? null : Number(x); });
@@ -1962,10 +2081,39 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzZv63oOvymZCGLMnF_Nkne
     getResults: ()=>portalResults,
     saveResults: async (month, rows) => { await api.post('savePortalResults', {month, rows}); portalResults = portalResults.filter(r=>r.month!==month).concat(rows.map(r=>({...r, month}))); },
   });
+  const isMeta = t => String(t||'').indexOf('meta')===0;
+  /** 広告_月次は「月ごとに全行を置き換え」で保存されるので、もう一方の媒体の行も一緒に送る */
+  async function saveAdsMerged(month, rows, meta){
+    const keep = ads.filter(r=>r.month===month && isMeta(r.target)!==meta);
+    const all = rows.concat(keep);
+    await api.post('saveAds', {month, rows: all});
+    ads = ads.filter(r=>r.month!==month).concat(all.map(r=>({...r, month})));
+  }
+  const metaAdsUI = createAdsPage({
+    root: $('metaAdsRoot'), allLabel: "両店（共通）", allId: 'meta_all', noSettings: true, noDaily: true,
+    targets: [{id:'meta_nozawa', name:'野沢店', match:[]}, {id:'meta_yoga', name:'用賀店', match:[]}],
+    labels: {cost:'消化金額（円）', impr:'表示回数（インプレッション）', clicks:'リンクのクリック', conv:'リーチ（見た人数）'}, reachKey: true,
+    title: 'Meta広告の月次の数字',
+    intro: 'Metaの広告マネージャ（または Meta Business Suite）で、月を「先月」などに合わせて、キャンペーンごとの消化金額・インプレッション・リーチ・リンクのクリックを店舗の行に入れます。問い合わせ・体験・入会は「Instagram・Facebookの広告を見て来た人」だけを数えます',
+    autoNote: '<p class="hint" style="margin-top:10px">表示回数＝広告が画面に出た回数（同じ人に何度出ても数えます）。リーチ＝広告を1回以上見た人の数。表示回数 ÷ リーチ が1人あたりの表示回数（フリークエンシー）です。</p>',
+    guide: `<div class="card"><h2>数字の見つけ方 <span class="note">月に1回、田中さん（広告の管理者）が入れます</span></h2><ol class="ad-steps">
+      <li><b>広告マネージャを開く</b>：business.facebook.com → 広告マネージャ →「キャンペーン」。右上の期間を入れたい月（例：10月1日〜31日）にします。</li>
+      <li><b>列を「パフォーマンス」にする</b>：「消化金額」「インプレッション」「リーチ」「リンクのクリック」が並びます。店舗ごとにキャンペーンを分けている場合は、それぞれの行の数字を野沢店・用賀店に入れます。両店まとめた広告は「両店（共通）」へ。</li>
+      <li><b>キャンペーン名に店舗名を入れておく</b>：「AIRNIX野沢_体験」「AIRNIX用賀_体験」のようにすると、どちらの店舗の数字か迷いません。</li>
+      <li><b>体験・入会の受付で聞く</b>：「何を見て来ましたか？」で Instagram・Facebook の広告と答えた人を、この表の「体験」「入会」に入れます。</li></ol></div>`,
+    getAds: ()=>ads.filter(r=>isMeta(r.target)), getDaily: ()=>[], getSettings: ()=>({}),
+    saveAds: async (month, rows) => saveAdsMerged(month, rows, true), onSaved: ()=>renderDash(),
+    saveSettings: async ()=>{},
+  });
+  document.querySelectorAll('[data-ads]').forEach(b=>b.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-ads]').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    $('metaAdsRoot').hidden = b.dataset.ads!=='meta'; $('adsRoot').hidden = b.dataset.ads!=='google';
+    (b.dataset.ads==='meta'?metaAdsUI:adsUI).render();
+  }));
   const adsUI = createAdsPage({
     root: $('adsRoot'), allLabel: "両店（共通）", targets: [{"id": "nozawa", "name": "野沢店", "match": ["野沢"]}, {"id": "yoga", "name": "用賀店", "match": ["用賀"]}],
-    getAds: ()=>ads, getDaily: ()=>adsDaily, getSettings: ()=>adsSettings,
-    saveAds: async (month, rows) => { await api.post('saveAds', {month, rows}); ads = ads.filter(r=>r.month!==month).concat(rows.map(r=>({...r, month}))); },
+    getAds: ()=>ads.filter(r=>!isMeta(r.target)), getDaily: ()=>adsDaily, getSettings: ()=>adsSettings,
+    saveAds: async (month, rows) => saveAdsMerged(month, rows, false), onSaved: ()=>renderDash(),
     saveSettings: async v => { await api.post('saveAdsSettings', {value: v}); adsSettings = v; },
     webJoins: (m, id) => { if (id==='all') return null; const r = monthly[key(m,id)]; return r && r.shinkiSns!=null && r.shinkiSns!=='' ? Number(r.shinkiSns) : null; },
     webLabel: "月次入力の「新規：SNS・web」とも見比べてください（右端の列）。体験予約は mypage.airnix.jp なので、予約完了をコンバージョンにするにはドメインをまたぐ計測の設定が必要です。", webShort: '月次入力 新規(web)',
